@@ -41,5 +41,9 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>Tracking de la pièce</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Sauvegarde des images en local</string>
 </dict>
 </plist>
