@@ -21,10 +21,27 @@ class ArViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
         let viewportSize = sceneView.bounds.size
         
         let transform = lastFrameCaptured.displayTransform(for: orient, viewportSize: viewportSize).inverted()
+        let cloudpoints = lastFrameCaptured.rawFeaturePoints
+        print("========Cloud points======")
+        print(cloudpoints?.points)
+        print("========================")
+        print("========ProjectionMatrix=======")
+        print(lastFrameCaptured.camera.viewMatrix(for: orient))
+        
+        print("========================")
+        var screenshot = sceneView.snapshot()
+        UIImageWriteToSavedPhotosAlbum(screenshot, nil, nil, nil);
 //        let image = UIImage(pixelBuffer: lastFrameCaptured.capturedImage)
         let finalImage = CIImage(cvPixelBuffer: lastFrameCaptured.capturedImage).transformed(by: transform)
         let image = convert(cmage:finalImage)
         UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil);
+        for anchor in sceneView.session.currentFrame!.anchors {
+            
+            print("X=======================")
+            print(anchor)
+            print("X=======================")
+            
+        }
     }
     
     func convert(cmage:CIImage) -> UIImage
@@ -60,6 +77,7 @@ class ArViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
         
         // Run the view's session
         sceneView.session.run(configuration)
+        sceneView.debugOptions = [ARSCNDebugOptions.showFeaturePoints, SCNDebugOptions.showWireframe]
     }
     
     override func viewWillDisappear(_ animated: Bool) {
