@@ -27,6 +27,8 @@ class ArViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
         print("========================")
         print("========ProjectionMatrix=======")
         print(lastFrameCaptured.camera.viewMatrix(for: orient))
+        var point0 = lastFrameCaptured.camera.projectPoint((cloudpoints?.points[0])!, orientation: orient, viewportSize: viewportSize)
+        
         
         print("========================")
         var screenshot = sceneView.snapshot()
@@ -34,14 +36,36 @@ class ArViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
 //        let image = UIImage(pixelBuffer: lastFrameCaptured.capturedImage)
         let finalImage = CIImage(cvPixelBuffer: lastFrameCaptured.capturedImage).transformed(by: transform)
         let image = convert(cmage:finalImage)
-        UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil);
-        for anchor in sceneView.session.currentFrame!.anchors {
+        var imageToSave = convert(cmage:finalImage)
+        print("viewportSize")
+        print(viewportSize)
+        print(image.size)
+        var ratioy = (image.size.height/viewportSize.height)
+        var ratiox = image.size.width/viewportSize.width
+        
+        for point in (cloudpoints?.points)! {
             
-            print("X=======================")
-            print(anchor)
-            print("X=======================")
-            
+            var pointToDraw = lastFrameCaptured.camera.projectPoint(point, orientation: orient, viewportSize: viewportSize)
+            imageToSave = drawRectangleOnImage(image: imageToSave,point:pointToDraw, ratiox: ratiox, ratioy: ratioy)
         }
+        UIImageWriteToSavedPhotosAlbum(imageToSave, nil, nil, nil);
+    }
+    
+    func drawRectangleOnImage(image: UIImage, point: CGPoint, ratiox: CGFloat, ratioy: CGFloat) -> UIImage {
+        let imageSize = image.size
+        let scale: CGFloat = 0
+        UIGraphicsBeginImageContextWithOptions(imageSize, false, scale)
+        
+        image.draw(at: CGPoint(x: 0, y: 0))
+        
+        let rectangle = CGRect(x: point.x*ratiox, y: point.y*ratioy, width: 10, height: 10)
+        
+        UIColor.white.setFill()
+        UIRectFill(rectangle)
+        
+        let newImage = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        return newImage!
     }
     
     func convert(cmage:CIImage) -> UIImage
