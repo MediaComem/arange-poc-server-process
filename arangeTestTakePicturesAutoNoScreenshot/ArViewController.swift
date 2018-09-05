@@ -16,11 +16,14 @@ class ArViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
     
     @IBOutlet weak var sceneView: ARSCNView!
     
+    // Lorsque le bouton est pressé, on récupère la dernière ARFrame capturée par le téléphone.
+    // Cet alors à partir de cette ARFrame que l'on va récupérer les nuages des points et toutes les données necessaires
     @IBAction func buttonPressed(_ sender: Any) {
         let orient = UIApplication.shared.statusBarOrientation
         let viewportSize = sceneView.bounds.size
         
-        var capturedFrame = lastFrameCaptured
+        var capturedFrame = lastFrameCaptured // La dernière ARFRame capturée par le téléphone
+        // Les données ci-dessous sont nécessaires pour tenter de re-créer le nuage du point côté serveur
         let transform = capturedFrame!.displayTransform(for: orient, viewportSize: viewportSize).inverted()
         let cloudpoints = capturedFrame!.rawFeaturePoints
         
@@ -43,12 +46,11 @@ class ArViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
         print("========imageResolution=======")
         print(capturedFrame?.camera.imageResolution)
         print("========================")
+        // Le screenshot représente l'image affichée sur l'écran du téléphone. Cette image n'est pas directement traitable côté serveur puisqu'elle contient tous les éléments d'UX et d'UI.
         var screenshot = sceneView.snapshot()
         var pointsToDraw = cloudpoints?.points
-        
-        
         UIImageWriteToSavedPhotosAlbum(screenshot, nil, nil, nil);
-//        let image = UIImage(pixelBuffer: lastFrameCaptured.capturedImage)
+        // Le screenshot n'étant pas exploitable, on récupère l'image prise depuis la camera du téléphone
         let finalImage = CIImage(cvPixelBuffer: (capturedFrame?.capturedImage)!).transformed(by: transform)
         let image = convert(cmage:finalImage)
         var imageToSave = convert(cmage:finalImage)
@@ -62,8 +64,9 @@ class ArViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
         print("========================")
         var points2D: [CGPoint] = []
         
+        // Ci-dessous on souhaite redessiner sur l'image camera le nuage de points détecté sur l'ARFrame
         DispatchQueue.global(qos: .background).async {
-            print("This is run on the background queue")
+            print("This is run on the background queue otherwise it will crash")
             for point in (pointsToDraw)! {
                 autoreleasepool {
                     var pointToDraw = capturedFrame?.camera.projectPoint(point, orientation: orient, viewportSize: viewportSize)
@@ -82,6 +85,7 @@ class ArViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
         }
     }
     
+    // Redessine le point sur la photo sauvegardée
     func drawRectangleOnImage(image: UIImage, point: CGPoint, ratiox: CGFloat, ratioy: CGFloat) -> (UIImage,CGPoint) {
         
         let imageSize = image.size
